@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.1](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.2.0...mini-claude-code-v0.2.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* load env files robustly from arbitrary launch paths ([96010f7](https://github.com/li-dashan/mini-claude-code/commit/96010f7d6a637dc4eb12944bd19c162e0edc6539))
+* make manual PyPI publish workflow usable for backfill ([1549e0a](https://github.com/li-dashan/mini-claude-code/commit/1549e0a0893661c46ea1f1a30c68e41f03708926))
+* repair release automation and PyPI publishing ([1bb5bcc](https://github.com/li-dashan/mini-claude-code/commit/1bb5bccfad6e93104e890a8d35f16b2001037509))
+
+
+### Documentation
+
+* improve README with env resolution and release workflow ([d00dc1d](https://github.com/li-dashan/mini-claude-code/commit/d00dc1dcf24370947375cb90b39a8138a48069f4))
+
 ## [0.2.0](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.1.1...mini-claude-code-v0.2.0) (2026-04-01)
 
 
