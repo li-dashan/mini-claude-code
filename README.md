@@ -18,14 +18,25 @@
 	<img alt="UI" src="https://img.shields.io/badge/UI-Rich%20%2B%20Textual-1E293B" />
 </p>
 
+## 界面预览
+
+
+<p align="center">
+	<img src="assets/tui-screenshot-placeholder.png" alt="mini-claude TUI screenshot" width="100%" />
+</p>
+
 ## 特性亮点
 
 - 双 Provider：支持 Anthropic / OpenAI，统一走 `LLMProvider` 抽象层
+- OpenAI 兼容平台接入：支持 `OPENAI_BASE_URL`（如 147api）
 - Agentic Loop：流式输出 + 工具调用 + 多轮迭代
 - 多工具系统：`bash` / `read_file` / `write_file` / `glob`
 - 两套终端体验：`simple`（Rich REPL）与 `tui`（Textual 界面）
 - Buddy 电子宠物：多角色设定（外表/特性/故事/数值），按 username+hostname 永久分配，不可切换
 - 思考动画 + 工具反馈：thinking 时动态表情，工具调用成功/失败会影响心情与信任值
+- 运行时配置管理：`/show-config`、`/set-config`，并自动持久化到 `.env`
+- 工具可视化与手动调用：`/tools`、`/tool <name> <json-args>`
+- TUI 交互增强：Tab 命令补全、配置键补全、↑↓ 输入历史
 - 可读性导向：代码结构清晰，适合学习和二次改造
 
 ## 快速开始
@@ -64,7 +75,9 @@ cp .env.example .env
 ```env
 LLM_PROVIDER=anthropic
 ANTHROPIC_MODEL=claude-sonnet-4-5-20251022
+OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o
+# OPENAI_BASE_URL=https://api.147ai.cn/v1
 MAX_ITERATIONS=10
 WORK_DIR=.
 UI_MODE=simple
@@ -74,6 +87,10 @@ UI_MODE=simple
 
 - `UI_MODE=tui` 时启动 Textual TUI
 - 默认 `UI_MODE=simple` 为 Rich REPL
+- 使用 147api 等聚合平台时：
+	- `LLM_PROVIDER=openai`
+	- `OPENAI_API_KEY=<平台 key>`
+	- `OPENAI_BASE_URL=<平台 OpenAI 兼容 base url>`（通常带 `/v1`）
 
 ### 3. 运行
 
@@ -96,6 +113,31 @@ python -m mini_claude.main
 - `/profile`：查看 buddy 完整介绍页（含属性数值可视化）
 - `/pet`：抚摸 buddy，提升信任值
 - `/feed`：投喂 buddy，恢复能量
+- `/show-config [KEY]`：查看全部或单个运行时配置
+- `/set-config <KEY> <VALUE>`：修改配置，并写回 `.env`
+- `/tools`：查看已注册工具列表
+- `/tool <NAME> <JSON_ARGS>`：手动调用工具（调试/教学很有用）
+
+示例：
+
+```bash
+/show-config
+/set-config MAX_ITERATIONS 20
+/tools
+/tool bash {"command":"ls -la"}
+```
+
+支持的运行时配置键：
+
+- `LLM_PROVIDER`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `OPENAI_BASE_URL`
+- `MAX_ITERATIONS`
+- `WORK_DIR`
+- `system_prompt`
 
 ## Agentic Loop 核心
 
@@ -115,13 +157,14 @@ python -m mini_claude.main
 src/mini_claude/
 	main.py                  # 程序入口，组装 Provider / Tool / UI
 	core/
+		config.py              # 运行时配置管理（show/set-config + .env 持久化）
 		context_manager.py     # 上下文与消息管理
 		query_engine.py        # Agentic Loop 核心
 		types.py               # 全局类型定义
 	llm/
 		provider.py            # LLM 抽象接口
 		anthropic_provider.py  # Anthropic 实现
-		openai_provider.py     # OpenAI 实现
+		openai_provider.py     # OpenAI/OpenAI-compatible 实现
 	tools/
 		base.py                # Tool 抽象基类
 		registry.py            # 工具注册与调度
@@ -130,6 +173,7 @@ src/mini_claude/
 		write_file.py          # 文件写入
 		glob_tool.py           # Glob 搜索
 	ui/
+		buddy.py               # Buddy 电子宠物系统
 		simple_repl.py         # Rich 终端 REPL
 		tui/
 			app.py               # Textual TUI
