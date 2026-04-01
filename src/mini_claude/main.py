@@ -1,7 +1,6 @@
 """Main entry point for mini-claude-code."""
 
 import asyncio
-import logging
 import os
 from pathlib import Path
 
@@ -19,19 +18,6 @@ from mini_claude.core.context_manager import ContextManager
 from mini_claude.core.query_engine import QueryEngine
 from mini_claude.ui.simple_repl import SimpleREPL
 from mini_claude.ui.tui import TextualTUI
-
-
-logger = logging.getLogger(__name__)
-
-
-def setup_logging() -> None:
-    """Setup application logging from env vars."""
-    level_name = os.getenv("LOG_LEVEL", "INFO").upper()
-    level = getattr(logging, level_name, logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
 
 
 def load_env() -> None:
@@ -90,8 +76,6 @@ def setup_tools(work_dir: str = ".") -> ToolRegistry:
 
 def main() -> None:
     """Main entry point."""
-    setup_logging()
-
     # Load environment
     load_env()
 
@@ -100,17 +84,6 @@ def main() -> None:
     work_dir = os.getenv("WORK_DIR", ".")
     max_iterations = int(os.getenv("MAX_ITERATIONS", "10"))
     ui_mode = os.getenv("UI_MODE", "simple")
-
-    logger.info(
-        "Startup config loaded (provider=%s, ui_mode=%s, work_dir=%s, max_iterations=%s)",
-        provider_name,
-        ui_mode,
-        work_dir,
-        max_iterations,
-    )
-
-    if provider_name == "openai":
-        logger.info("OpenAI-compatible base_url=%s", os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"))
 
     # Setup components
     provider = get_llm_provider(provider_name)
