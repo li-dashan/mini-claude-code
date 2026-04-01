@@ -1,7 +1,9 @@
 """Main entry point for mini-claude-code."""
 
 import asyncio
+import getpass
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -36,7 +38,7 @@ def load_env() -> None:
     1. MINI_CLAUDE_ENV_FILE (absolute or relative path)
     2. First `.env` found from CWD upwards
     3. `.env` near installed package/project root
-    4. User config env (`~/.config/mini-claude/.env`, `~/.mini-claude/.env`)
+    4. User config env (`~/.mini-claude.env`, `~/.config/mini-claude/.env`, `~/.mini-claude/.env`)
     5. `.env.example` from CWD upwards
     6. `.env.example` near installed package/project root
     """
@@ -55,6 +57,7 @@ def load_env() -> None:
     candidates = [
         _find_upwards(".env", cwd),
         package_root / ".env",
+        Path.home() / ".mini-claude.env",
         Path.home() / ".config" / "mini-claude" / ".env",
         Path.home() / ".mini-claude" / ".env",
         _find_upwards(".env.example", cwd),
@@ -76,18 +79,34 @@ def get_llm_provider(provider_name: str = "anthropic"):
     Returns:
         LLMProvider instance
     """
+    def _resolve_api_key(var_name: str, provider_label: str) -> str:
+        existing = os.getenv(var_name, "").strip()
+        if existing:
+            return existing
+
+        # Interactive fallback for CLI usage; allows empty value as requested.
+        if sys.stdin.isatty():
+            entered = getpass.getpass(
+                prompt=(
+                    f"{var_name} not set for {provider_label}. "
+                    "Input API key (leave empty to continue): "
+                )
+            ).strip()
+            if entered:
+                os.environ[var_name] = entered
+            return entered
+
+        # Non-interactive mode (CI/service): continue with empty key.
+        return ""
+
     if provider_name == "openai":
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY not set in environment")
+        api_key = _resolve_api_key("OPENAI_API_KEY", "openai")
         model = os.getenv("OPENAI_MODEL", "gpt-4o")
         base_url = os.getenv("OPENAI_BASE_URL") or None
         return OpenAIProvider(api_key=api_key, model=model, base_url=base_url)
     else:
         # Default to Anthropic
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not set in environment")
+        api_key = _resolve_api_key("ANTHROPIC_API_KEY", "anthropic")
         model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20251022")
         return AnthropicProvider(api_key=api_key, model=model)
 

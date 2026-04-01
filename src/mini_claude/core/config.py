@@ -55,11 +55,13 @@ def _mask(value: str) -> str:
     return value[:4] + "..." + value[-4:]
 
 
-def _update_env_file(key: str, value: str, env_path: Path = Path(".env")) -> None:
+def _update_env_file(key: str, value: str, env_path: Path = Path.home() / ".mini-claude.env") -> None:
     """Insert or replace ``key=value`` in *env_path*, creating it if absent."""
     # Quote values that contain spaces
     quoted = f'"{value}"' if " " in value else value
     new_line = f"{key}={quoted}"
+
+    env_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not env_path.exists():
         env_path.write_text(new_line + "\n", encoding="utf-8")
@@ -78,9 +80,13 @@ def _update_env_file(key: str, value: str, env_path: Path = Path(".env")) -> Non
 
 
 class RuntimeConfig:
-    """Reads and writes all configurable settings, persisting env vars to .env."""
+    """Reads and writes settings, persisting env vars to a user-level env file."""
 
-    def __init__(self, engine: "QueryEngine", env_path: Path = Path(".env")) -> None:
+    def __init__(
+        self,
+        engine: "QueryEngine",
+        env_path: Path = Path.home() / ".mini-claude.env",
+    ) -> None:
         self._engine = engine
         self._env_path = env_path
 
