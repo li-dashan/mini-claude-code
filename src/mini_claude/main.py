@@ -20,13 +20,51 @@ from mini_claude.ui.simple_repl import SimpleREPL
 from mini_claude.ui.tui import TextualTUI
 
 
+def _find_upwards(filename: str, start: Path) -> Path | None:
+    """Search for a file in start dir and its parents."""
+    for directory in [start, *start.parents]:
+        candidate = directory / filename
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def load_env() -> None:
-    """Load environment variables from .env file."""
-    env_path = Path(".env")
-    if env_path.exists():
-        load_dotenv(env_path)
-    else:
-        load_dotenv(".env.example")
+    """Load environment variables.
+
+    Priority:
+    1. MINI_CLAUDE_ENV_FILE (absolute or relative path)
+    2. First `.env` found from CWD upwards
+    3. `.env` near installed package/project root
+    4. User config env (`~/.config/mini-claude/.env`, `~/.mini-claude/.env`)
+    5. `.env.example` from CWD upwards
+    6. `.env.example` near installed package/project root
+    """
+    explicit = os.getenv("MINI_CLAUDE_ENV_FILE")
+    if explicit:
+        explicit_path = Path(explicit).expanduser().resolve()
+        if explicit_path.exists():
+            load_dotenv(explicit_path)
+            return
+
+    cwd = Path.cwd().resolve()
+
+    # Repository root when running from source tree is usually two levels above this file.
+    package_root = Path(__file__).resolve().parents[2]
+
+    candidates = [
+        _find_upwards(".env", cwd),
+        package_root / ".env",
+        Path.home() / ".config" / "mini-claude" / ".env",
+        Path.home() / ".mini-claude" / ".env",
+        _find_upwards(".env.example", cwd),
+        package_root / ".env.example",
+    ]
+
+    for path in candidates:
+        if path is not None and path.exists():
+            load_dotenv(path)
+            return
 
 
 def get_llm_provider(provider_name: str = "anthropic"):
