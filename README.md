@@ -161,6 +161,13 @@ pytest
 - `.github/workflows/release-please.yml`
 - `.github/workflows/release-publish.yml`
 
+如果遇到 `GitHub Actions is not permitted to create or approve pull requests`：
+
+- 到仓库 `Settings -> Actions -> General -> Workflow permissions`
+- 开启 `Read and write permissions`
+- 勾选 `Allow GitHub Actions to create and approve pull requests`
+- 可选：配置 `RELEASE_PLEASE_TOKEN`（PAT，`repo` 权限）以避免受默认 `GITHUB_TOKEN` 限制
+
 建议使用 Conventional Commits：
 
 - `feat:` -> minor
