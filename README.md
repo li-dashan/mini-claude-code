@@ -149,31 +149,6 @@ mypy src
 pytest
 ```
 
-## 自动化 Release
-
-本项目已接入基于 GitHub Actions 的自动化 Release：
-
-- `Release Please`：监听 `main`，自动生成/更新 Release PR（版本号 + CHANGELOG）
-- `Release Publish`：当 GitHub Release 发布后，自动构建 `dist/*` 并上传到 release assets
-
-工作流文件：
-
-- `.github/workflows/release-please.yml`
-- `.github/workflows/release-publish.yml`
-
-如果遇到 `GitHub Actions is not permitted to create or approve pull requests`：
-
-- 到仓库 `Settings -> Actions -> General -> Workflow permissions`
-- 开启 `Read and write permissions`
-- 勾选 `Allow GitHub Actions to create and approve pull requests`
-- 可选：配置 `RELEASE_PLEASE_TOKEN`（PAT，`repo` 权限）以避免受默认 `GITHUB_TOKEN` 限制
-
-建议使用 Conventional Commits：
-
-- `feat:` -> minor
-- `fix:` -> patch
-- `feat!:` 或 `BREAKING CHANGE:` -> major
-
 ## 许可证
 
 本项目使用 MIT License，详见 `LICENSE` 文件。
