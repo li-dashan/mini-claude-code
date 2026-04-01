@@ -5,8 +5,8 @@
 <h1 align="center">mini-claude-code</h1>
 
 <p align="center">
-	一个用于学习 AI Agent 架构的 Python 项目。<br/>
-	目标是用最小可读实现复刻「带工具调用的终端助手」核心流程。
+	A Python project for learning AI Agent architecture.<br/>
+	The goal is to replicate the core workflow of a "terminal assistant with tool calling" using a minimal, readable implementation.
 </p>
 
 <p align="center">
@@ -19,32 +19,33 @@
 	<img alt="UI" src="https://img.shields.io/badge/UI-Rich%20%2B%20Textual-1E293B" />
 </p>
 
-## 界面预览
+> 中文文档请见 [README.zh-CN.md](README.zh-CN.md)
 
+## Preview
 
 <p align="center">
 	<img src="https://raw.githubusercontent.com/li-dashan/mini-claude-code/main/assets/tui-screenshot-placeholder.png" alt="mini-claude TUI screenshot" width="100%" />
 </p>
 
-## 特性亮点
+## Highlights
 
-- 双 Provider：支持 Anthropic / OpenAI，统一走 `LLMProvider` 抽象层
-- OpenAI 兼容平台接入：支持 `OPENAI_BASE_URL`（如 147api）
-- Agentic Loop：流式输出 + 工具调用 + 多轮迭代
-- 多工具系统：`bash` / `read_file` / `write_file` / `glob`
-- 两套终端体验：`simple`（Rich REPL）与 `tui`（Textual 界面）
-- Buddy 电子宠物：多角色设定（外表/特性/故事/数值），按 username+hostname 永久分配，不可切换
-- 思考动画 + 工具反馈：thinking 时动态表情，工具调用成功/失败会影响心情与信任值
-- 运行时配置管理：`/show-config`、`/set-config`，并自动持久化到 `.env`
-- 工具可视化与手动调用：`/tools`、`/tool <name> <json-args>`
-- TUI 交互增强：Tab 命令补全、配置键补全、↑↓ 输入历史
-- 可读性导向：代码结构清晰，适合学习和二次改造
+- **Dual Provider**: Supports Anthropic / OpenAI via a unified `LLMProvider` abstraction
+- **OpenAI-Compatible Platforms**: Supports `OPENAI_BASE_URL` (e.g. 147api)
+- **Agentic Loop**: Streaming output + tool calling + multi-turn iteration
+- **Multi-Tool System**: `bash` / `read_file` / `write_file` / `glob`
+- **Two Terminal UIs**: `simple` (Rich REPL) and `tui` (Textual interface)
+- **Buddy Pet**: Multiple character presets (appearance / traits / backstory / stats), permanently assigned by username+hostname — no switching
+- **Thinking Animation + Tool Feedback**: Dynamic expressions while thinking; tool success/failure affects mood and trust level
+- **Runtime Config Management**: `/show-config`, `/set-config`, with automatic persistence to `.env`
+- **Tool Visualization & Manual Invocation**: `/tools`, `/tool <name> <json-args>`
+- **Enhanced TUI Interaction**: Tab command completion, config key completion, ↑↓ input history
+- **Readability-Oriented**: Clean code structure, ideal for learning and customization
 
-## 快速开始
+## Quick Start
 
-### 1. 安装
+### 1. Install
 
-方式 1（推荐，uv）：
+Option 1 (recommended, uv):
 
 ```bash
 uv venv
@@ -52,7 +53,7 @@ source .venv/bin/activate
 uv pip install -e .
 ```
 
-方式 2（pip）：
+Option 2 (pip):
 
 ```bash
 python -m venv .venv
@@ -60,18 +61,18 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### 2. 配置环境变量
+### 2. Configure Environment Variables
 
 ```bash
 cp .env.example .env
 ```
 
-至少配置以下变量之一：
+Configure at least one of the following:
 
-- `ANTHROPIC_API_KEY`（当 `LLM_PROVIDER=anthropic`）
-- `OPENAI_API_KEY`（当 `LLM_PROVIDER=openai`）
+- `ANTHROPIC_API_KEY` (when `LLM_PROVIDER=anthropic`)
+- `OPENAI_API_KEY` (when `LLM_PROVIDER=openai`)
 
-常用配置：
+Common configuration:
 
 ```env
 LLM_PROVIDER=anthropic
@@ -84,55 +85,55 @@ WORK_DIR=.
 UI_MODE=tui
 ```
 
-说明：
+Notes:
 
-- `UI_MODE=tui` 时启动 Textual TUI
-- 默认 `UI_MODE=tui` 为 Textual TUI
-- 使用 147api 等聚合平台时：
+- Setting `UI_MODE=tui` launches the Textual TUI
+- Default `UI_MODE=tui` uses the Textual TUI
+- When using aggregator platforms like 147api:
 	- `LLM_PROVIDER=openai`
-	- `OPENAI_API_KEY=<平台 key>`
-	- `OPENAI_BASE_URL=<平台 OpenAI 兼容 base url>`（通常带 `/v1`）
+	- `OPENAI_API_KEY=<platform key>`
+	- `OPENAI_BASE_URL=<OpenAI-compatible base URL>` (usually includes `/v1`)
 
-### 2.1 配置文件查找优先级
+### 2.1 Config File Lookup Priority
 
-`mini-claude` 启动时会按以下顺序加载环境变量（命中即停止）：
+On startup, `mini-claude` loads environment variables in the following order (stops at first match):
 
-1. `MINI_CLAUDE_ENV_FILE` 指定的文件
-2. 当前工作目录向上查找 `.env`
-3. 包/项目根目录附近的 `.env`
-4. 用户级配置：`~/.config/mini-claude/.env`、`~/.mini-claude/.env`
-5. 当前工作目录向上查找 `.env.example`
-6. 包/项目根目录附近的 `.env.example`
+1. File specified by `MINI_CLAUDE_ENV_FILE`
+2. `.env` found by walking up from the current working directory
+3. `.env` near the package/project root
+4. User-level config: `~/.config/mini-claude/.env`, `~/.mini-claude/.env`
+5. `.env.example` found by walking up from the current working directory
+6. `.env.example` near the package/project root
 
-这意味着你可以在任意路径执行 `mini-claude`，并通过 `MINI_CLAUDE_ENV_FILE` 精确指定配置文件。
+This means you can run `mini-claude` from any path and point to a specific config file via `MINI_CLAUDE_ENV_FILE`.
 
-### 3. 运行
+### 3. Run
 
 ```bash
 mini-claude
 ```
 
-或：
+Or:
 
 ```bash
 python -m mini_claude.main
 ```
 
-## 交互命令
+## Interactive Commands
 
-- `/exit`：退出
-- `/clear`：清空上下文历史
-- `/history`：显示当前上下文估算 token 数
-- `/buddy`：查看 buddy 当前状态与名册
-- `/profile`：查看 buddy 完整介绍页（含属性数值可视化）
-- `/pet`：抚摸 buddy，提升信任值
-- `/feed`：投喂 buddy，恢复能量
-- `/show-config [KEY]`：查看全部或单个运行时配置
-- `/set-config <KEY> <VALUE>`：修改配置，并写回 `.env`
-- `/tools`：查看已注册工具列表
-- `/tool <NAME> <JSON_ARGS>`：手动调用工具（调试/教学很有用）
+- `/exit` — Quit
+- `/clear` — Clear context history
+- `/history` — Show estimated token count for current context
+- `/buddy` — View buddy's current status and roster
+- `/profile` — View buddy's full profile page (with stat visualization)
+- `/pet` — Pet your buddy to increase trust
+- `/feed` — Feed your buddy to restore energy
+- `/show-config [KEY]` — Show all or a specific runtime config value
+- `/set-config <KEY> <VALUE>` — Update config and write back to `.env`
+- `/tools` — List all registered tools
+- `/tool <NAME> <JSON_ARGS>` — Manually invoke a tool (useful for debugging/learning)
 
-示例：
+Examples:
 
 ```bash
 /show-config
@@ -141,7 +142,7 @@ python -m mini_claude.main
 /tool bash {"command":"ls -la"}
 ```
 
-支持的运行时配置键：
+Supported runtime config keys:
 
 - `LLM_PROVIDER`
 - `ANTHROPIC_API_KEY`
@@ -153,91 +154,91 @@ python -m mini_claude.main
 - `WORK_DIR`
 - `system_prompt`
 
-## Agentic Loop 核心
+## Agentic Loop Core
 
-`QueryEngine.run()` 关键流程：
+Key flow of `QueryEngine.run()`:
 
-1. 记录用户输入到上下文
-2. 流式调用 LLM 并实时输出文本
-3. 收集工具调用请求
-4. 并发执行工具并写回结果
-5. 在 `max_iterations` 内循环，直到模型结束当前回合
+1. Record user input to context
+2. Stream LLM response and output text in real time
+3. Collect tool call requests
+4. Execute tools concurrently and write results back
+5. Loop within `max_iterations` until the model ends the current turn
 
-该结构支持一个回合内的「思考 -> 调工具 -> 再思考」迭代。
+This structure supports "think → call tool → think again" iteration within a single turn.
 
-## 项目结构
+## Project Structure
 
 ```text
 src/mini_claude/
-	main.py                  # 程序入口，组装 Provider / Tool / UI
+	main.py                  # Entry point; assembles Provider / Tool / UI
 	core/
-		config.py              # 运行时配置管理（show/set-config + .env 持久化）
-		context_manager.py     # 上下文与消息管理
-		query_engine.py        # Agentic Loop 核心
-		types.py               # 全局类型定义
+		config.py              # Runtime config management (show/set-config + .env persistence)
+		context_manager.py     # Context and message management
+		query_engine.py        # Agentic Loop core
+		types.py               # Global type definitions
 	llm/
-		provider.py            # LLM 抽象接口
-		anthropic_provider.py  # Anthropic 实现
-		openai_provider.py     # OpenAI/OpenAI-compatible 实现
+		provider.py            # LLM abstract interface
+		anthropic_provider.py  # Anthropic implementation
+		openai_provider.py     # OpenAI / OpenAI-compatible implementation
 	tools/
-		base.py                # Tool 抽象基类
-		registry.py            # 工具注册与调度
-		bash.py                # Bash 执行
-		read_file.py           # 文件读取
-		write_file.py          # 文件写入
-		glob_tool.py           # Glob 搜索
+		base.py                # Tool abstract base class
+		registry.py            # Tool registration and dispatch
+		bash.py                # Bash execution
+		read_file.py           # File reading
+		write_file.py          # File writing
+		glob_tool.py           # Glob search
 	ui/
-		buddy.py               # Buddy 电子宠物系统
-		simple_repl.py         # Rich 终端 REPL
+		buddy.py               # Buddy virtual pet system
+		simple_repl.py         # Rich terminal REPL
 		tui/
 			app.py               # Textual TUI
 ```
 
-## 开发
+## Development
 
-安装开发依赖：
+Install development dependencies:
 
 ```bash
 pip install -e .[dev]
 ```
 
-类型检查：
+Type checking:
 
 ```bash
 mypy src
 ```
 
-测试：
+Tests:
 
 ```bash
 pytest
 ```
 
-## 发布流程（GitHub + PyPI）
+## Release Process (GitHub + PyPI)
 
-当前项目已配置：
+The project is configured with:
 
-- `Release Please`：自动生成 release PR / tag / GitHub Release
-- 自动发布 PyPI：在 release 创建后构建并上传
-- 手动兜底发布：`Release Publish` workflow（`workflow_dispatch`）
+- **Release Please**: Automatically generates release PRs / tags / GitHub Releases
+- **Auto PyPI publish**: Builds and uploads after a release is created
+- **Manual fallback publish**: `Release Publish` workflow (`workflow_dispatch`)
 
-建议发布步骤：
+Recommended release steps:
 
-1. 按 Conventional Commits 提交（`feat:` / `fix:` 等）
-2. 合并 release-please 生成的 release PR
-3. 等待 GitHub Actions 完成发布
-4. 在 PyPI 页面确认新版本可见
+1. Commit using Conventional Commits (`feat:` / `fix:` etc.)
+2. Merge the release PR generated by release-please
+3. Wait for GitHub Actions to complete the publish
+4. Confirm the new version is visible on PyPI
 
-如果自动发布未触发，可在 Actions 中手动运行 `Release Publish`。
+If the auto-publish doesn't trigger, manually run `Release Publish` in Actions.
 
-## 常见问题
+## FAQ
 
-- PyPI README 图片不显示：
-	- 使用 GitHub Raw 绝对链接，不要用仓库相对路径
-- 聚合平台连接失败：
-	- 检查 `OPENAI_BASE_URL` 是否为 OpenAI 兼容地址且通常带 `/v1`
-	- 确认 `LLM_PROVIDER=openai` 与 `OPENAI_API_KEY` 匹配
+- **PyPI README images not showing**:
+	- Use absolute GitHub Raw links; do not use repository-relative paths
+- **Aggregator platform connection failure**:
+	- Check that `OPENAI_BASE_URL` is an OpenAI-compatible address, usually including `/v1`
+	- Confirm `LLM_PROVIDER=openai` matches `OPENAI_API_KEY`
 
-## 许可证
+## License
 
-本项目使用 MIT License，详见 `LICENSE` 文件。
+This project is licensed under the MIT License. See the `LICENSE` file for details.
