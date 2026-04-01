@@ -81,13 +81,13 @@ OPENAI_MODEL=gpt-4o
 # OPENAI_BASE_URL=https://api.147ai.cn/v1
 MAX_ITERATIONS=10
 WORK_DIR=.
-UI_MODE=simple
+UI_MODE=tui
 ```
 
 说明：
 
 - `UI_MODE=tui` 时启动 Textual TUI
-- 默认 `UI_MODE=simple` 为 Rich REPL
+- 默认 `UI_MODE=tui` 为 Textual TUI
 - 使用 147api 等聚合平台时：
 	- `LLM_PROVIDER=openai`
 	- `OPENAI_API_KEY=<平台 key>`
