@@ -68,18 +68,16 @@ class ContextManager:
             self._messages.append(msg)
 
     def add_tool_results(self, results: list[ToolResultContent]) -> None:
-        """Add tool results to the last assistant message.
+        """Add tool results as a user message.
 
         Args:
             results: List of ToolResultContent objects
         """
-        if not self._messages or self._messages[-1].role != "assistant":
-            # Create a new assistant message with tool results
-            msg = Message(role="assistant", content=results)
-            self._messages.append(msg)
-        else:
-            # Add to last message
-            self._messages[-1].content.extend(results)
+        # Tool outputs should be sent back to the model in a user/tool-result turn.
+        # This matches Anthropic's tool_result flow and OpenAI's tool role semantics
+        # after conversion in the provider layer.
+        msg = Message(role="user", content=results)
+        self._messages.append(msg)
 
         # Track token estimate
         for result in results:

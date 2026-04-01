@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from rich.panel import Panel
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -94,6 +96,7 @@ class MiniClaudeApp(App[None]):
         "/exit", "/clear", "/history",
         "/buddy", "/profile", "/pet", "/feed",
         "/show-config", "/set-config",
+        "/tools", "/tool",
     ]
     _CMD_DESC = {
         "/exit":        "quit",
@@ -105,6 +108,8 @@ class MiniClaudeApp(App[None]):
         "/feed":        "feed buddy",
         "/show-config": "show setting [key]",
         "/set-config":  "change setting <key> <value>",
+        "/tools":       "list registered tools",
+        "/tool":        "run tool manually: /tool <name> <json>",
     }
 
     def __init__(self, query_engine: QueryEngine):
@@ -180,6 +185,13 @@ class MiniClaudeApp(App[None]):
                 hint.update(
                     f"[cyan]{cmd}[/cyan][dim] {self._CMD_DESC.get(cmd, '')}[/dim]"
                 )
+        elif val.startswith("/tool"):
+            tokens = val.split()
+            if len(tokens) >= 2 or val.endswith(" "):
+                tool_names = [d["name"] for d in self.query_engine.tool_registry.get_definitions()]
+                hint.update("[dim]tools:[/dim] " + "  ".join(f"[cyan]{n}[/cyan]" for n in tool_names))
+            else:
+                hint.update("[dim]Usage: /tool <name> <json-args>[/dim]")
         elif val.startswith("/"):
             matches = [c for c in self._COMMANDS if c.startswith(val)]
             if matches:
@@ -404,6 +416,41 @@ class MiniClaudeApp(App[None]):
                 return
             _, key, value = parts
             chat.write(self._config.set(key, value))
+            self._set_status("Ready")
+            return
+
+        if command == "/tools":
+            tools = self.query_engine.tool_registry.get_definitions()
+            if not tools:
+                chat.write("[dim]No tools registered.[/dim]")
+            else:
+                for tool in tools:
+                    chat.write(f"[cyan]{tool['name']}[/cyan] [dim]- {tool['description']}[/dim]")
+            self._set_status("Ready")
+            return
+
+        if command.startswith("/tool"):
+            parts = command.split(maxsplit=2)
+            if len(parts) < 3:
+                chat.write("[dim]Usage: /tool <name> <json-args>[/dim]")
+                chat.write("[dim]Example: /tool glob {\"pattern\":\"src/**/*.py\"}[/dim]")
+                self._set_status("Ready")
+                return
+            _, name, raw_args = parts
+            try:
+                parsed = json.loads(raw_args)
+            except json.JSONDecodeError as exc:
+                chat.write(f"[bold red]Invalid JSON args:[/] {exc}")
+                self._set_status("Ready")
+                return
+            if not isinstance(parsed, dict):
+                chat.write("[bold red]Tool args must be a JSON object.[/]")
+                self._set_status("Ready")
+                return
+
+            result = await self.query_engine.tool_registry.execute(name, parsed)
+            color = "red" if result.is_error else "green"
+            chat.write(f"[{color}]tool {name}: {result.content}[/{color}]")
             self._set_status("Ready")
             return
 

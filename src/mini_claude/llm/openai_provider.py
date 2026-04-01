@@ -13,6 +13,7 @@ from mini_claude.core import (
     ToolUseDelta,
     StopSignal,
     TextContent,
+    ToolUseContent,
     ToolResultContent,
 )
 from .provider import LLMProvider
@@ -101,12 +102,24 @@ class OpenAIProvider(LLMProvider):
                                 "type": "text",
                                 "text": content.text,
                             })
-                    # Note: ToolUseContent would be in tool_calls in OpenAI format
+                    elif isinstance(content, ToolUseContent):
+                        tool_calls.append({
+                            "id": content.id,
+                            "type": "function",
+                            "function": {
+                                "name": content.name,
+                                "arguments": json.dumps(content.input, ensure_ascii=False),
+                            },
+                        })
 
-                openai_messages.append({
+                assistant_msg: dict = {
                     "role": "assistant",
-                    "content": assistant_content if assistant_content else [{"type": "text", "text": ""}],
-                })
+                    "content": assistant_content if assistant_content else None,
+                }
+                if tool_calls:
+                    assistant_msg["tool_calls"] = tool_calls
+
+                openai_messages.append(assistant_msg)
 
         # Convert ToolDefinition to OpenAI format
         openai_tools = None

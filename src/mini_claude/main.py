@@ -92,7 +92,11 @@ def main() -> None:
     system_prompt = (
         "You are a helpful AI assistant that can use tools to help the user. "
         "You have access to bash, file reading/writing, and file search tools. "
-        "Always provide clear explanations of what you're doing."
+        "When a request involves filesystem state, shell commands, or codebase facts, "
+        "prefer calling tools over guessing. "
+        "Before claiming file contents, command output, or project state, verify with tools. "
+        "If a tool fails, explain the failure and retry with corrected arguments when reasonable. "
+        "Always provide clear explanations of what you're doing and base conclusions on tool results."
     )
 
     context_manager = ContextManager(system_prompt=system_prompt)

@@ -49,17 +49,50 @@ class _FakeProvider:
     model_name: str = "test-model"
 
 
+class _FakeToolResult:
+    def __init__(self, content: str, is_error: bool = False) -> None:
+        self.content = content
+        self.is_error = is_error
+
+
+class _FakeToolRegistry:
+    def get_definitions(self) -> list[dict]:
+        return [
+            {
+                "name": "read_file",
+                "description": "Read files from workspace",
+                "input_schema": {"type": "object"},
+            },
+            {
+                "name": "glob",
+                "description": "Glob file paths",
+                "input_schema": {"type": "object"},
+            },
+        ]
+
+    async def execute(self, name: str, input_: dict) -> _FakeToolResult:
+        if name == "glob":
+            pattern = input_.get("pattern", "")
+            return _FakeToolResult(content=f"matched: {pattern}", is_error=False)
+        return _FakeToolResult(content=f"Tool '{name}' not found", is_error=True)
+
+
 @dataclass
 class _FakeQueryEngine:
     context_manager: _FakeContextManager
     provider: _FakeProvider
+    tool_registry: _FakeToolRegistry
     max_iterations: int = 10
 
 
 @pytest.fixture
 def app_with_stubs(monkeypatch: pytest.MonkeyPatch) -> tuple[MiniClaudeApp, _FakeChat, _FakeStatus, _FakeContextManager]:
     context_manager = _FakeContextManager()
-    query_engine = _FakeQueryEngine(context_manager=context_manager, provider=_FakeProvider())
+    query_engine = _FakeQueryEngine(
+        context_manager=context_manager,
+        provider=_FakeProvider(),
+        tool_registry=_FakeToolRegistry(),
+    )
     app = MiniClaudeApp(query_engine=query_engine)  # type: ignore[arg-type]
 
     # Prevent any .env file writes during tests
@@ -410,4 +443,42 @@ async def test_set_config_env_key_persisted(
     await app._handle_command("/set-config LLM_PROVIDER anthropic")
 
     assert persisted == [("LLM_PROVIDER", "anthropic")]
+    assert status.last_text == "Ready"
+
+
+@pytest.mark.asyncio
+async def test_tools_command_lists_registered_tools(
+    app_with_stubs: tuple[MiniClaudeApp, _FakeChat, _FakeStatus, _FakeContextManager],
+) -> None:
+    app, chat, status, _ = app_with_stubs
+
+    await app._handle_command("/tools")
+
+    out = "\n".join(chat.writes)
+    assert "read_file" in out
+    assert "glob" in out
+    assert status.last_text == "Ready"
+
+
+@pytest.mark.asyncio
+async def test_tool_command_executes_tool(
+    app_with_stubs: tuple[MiniClaudeApp, _FakeChat, _FakeStatus, _FakeContextManager],
+) -> None:
+    app, chat, status, _ = app_with_stubs
+
+    await app._handle_command('/tool glob {"pattern":"src/**/*.py"}')
+
+    assert "matched: src/**/*.py" in chat.writes[0]
+    assert status.last_text == "Ready"
+
+
+@pytest.mark.asyncio
+async def test_tool_command_rejects_invalid_json(
+    app_with_stubs: tuple[MiniClaudeApp, _FakeChat, _FakeStatus, _FakeContextManager],
+) -> None:
+    app, chat, status, _ = app_with_stubs
+
+    await app._handle_command('/tool glob {bad-json}')
+
+    assert "Invalid JSON args" in chat.writes[0]
     assert status.last_text == "Ready"

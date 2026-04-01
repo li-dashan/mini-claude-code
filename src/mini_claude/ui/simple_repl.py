@@ -1,5 +1,7 @@
 """Simple REPL UI using rich library."""
 
+import json
+
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.panel import Panel
@@ -31,7 +33,8 @@ class SimpleREPL:
             Panel(
                 f"[bold cyan]mini-claude-code[/] ({provider_name})\n"
                 "[dim]An AI Agent framework for learning\n"
-                "Type [bold]/exit[/], [bold]/clear[/], [bold]/history[/], [bold]/buddy[/], [bold]/profile[/], [bold]/pet[/], [bold]/feed[/]",
+                "Type [bold]/exit[/], [bold]/clear[/], [bold]/history[/], [bold]/buddy[/], "
+                "[bold]/profile[/], [bold]/pet[/], [bold]/feed[/], [bold]/tools[/], [bold]/tool[/]",
                 expand=False,
             )
         )
@@ -167,6 +170,37 @@ class SimpleREPL:
             else:
                 _, key, value = parts
                 self.console.print(self._config.set(key, value))
+
+        elif command == "/tools":
+            tools = self.query_engine.tool_registry.get_definitions()
+            if not tools:
+                self.console.print("[dim]No tools registered.[/dim]")
+                return
+            for tool in tools:
+                self.console.print(
+                    f"[cyan]{tool['name']}[/cyan] [dim]- {tool['description']}[/dim]"
+                )
+
+        elif command.startswith("/tool"):
+            parts = command.split(maxsplit=2)
+            if len(parts) < 3:
+                self.console.print("[dim]Usage: /tool <name> <json-args>[/dim]")
+                self.console.print("[dim]Example: /tool glob {\"pattern\":\"src/**/*.py\"}[/dim]")
+                return
+            _, name, raw_args = parts
+            try:
+                parsed = json.loads(raw_args)
+            except json.JSONDecodeError as exc:
+                self.console.print(f"[red]Invalid JSON args:[/] {exc}")
+                return
+            if not isinstance(parsed, dict):
+                self.console.print("[red]Tool args must be a JSON object.[/red]")
+                return
+
+            self.console.print(f"[bold cyan][Tool][/] {name}")
+            result = await self.query_engine.tool_registry.execute(name, parsed)
+            color = "red" if result.is_error else "green"
+            self.console.print(f"[{color}]{result.content}[/{color}]")
 
         else:
             self.console.print(f"[red]Unknown command: {command}[/red]")
