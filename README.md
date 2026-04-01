@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="assets/logo.svg" width="136" alt="mini-claude-code logo" />
+	<img src="https://raw.githubusercontent.com/li-dashan/mini-claude-code/main/assets/logo.svg" width="136" alt="mini-claude-code logo" />
 </p>
 
 <h1 align="center">mini-claude-code</h1>
@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+	<a href="https://pypi.org/project/mini-claude-code/"><img alt="PyPI" src="https://img.shields.io/pypi/v/mini-claude-code" /></a>
 	<a href="https://github.com/li-dashan/mini-claude-code/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/li-dashan/mini-claude-code/ci.yml?branch=main&label=tests" /></a>
 	<a href="https://github.com/li-dashan/mini-claude-code/releases"><img alt="Release" src="https://img.shields.io/github/v/release/li-dashan/mini-claude-code?display_name=tag" /></a>
 	<a href="https://github.com/li-dashan/mini-claude-code/commits/main"><img alt="Last Commit" src="https://img.shields.io/github/last-commit/li-dashan/mini-claude-code/main" /></a>
@@ -22,7 +23,7 @@
 
 
 <p align="center">
-	<img src="assets/tui-screenshot-placeholder.png" alt="mini-claude TUI screenshot" width="100%" />
+	<img src="https://raw.githubusercontent.com/li-dashan/mini-claude-code/main/assets/tui-screenshot-placeholder.png" alt="mini-claude TUI screenshot" width="100%" />
 </p>
 
 ## 特性亮点
