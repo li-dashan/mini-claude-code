@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.2.1...mini-claude-code-v0.2.2) (2026-04-01)
+
+
+### Bug Fixes
+
+* improve env resolution and api-key fallback behavior ([77a82ef](https://github.com/li-dashan/mini-claude-code/commit/77a82efef929c516b56a20974e2f040a2ac26a8e))
+
 ## [0.2.1](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.2.0...mini-claude-code-v0.2.1) (2026-04-01)
 
 
