@@ -3,6 +3,7 @@
 import asyncio
 import getpass
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -22,52 +23,59 @@ from mini_claude.ui.simple_repl import SimpleREPL
 from mini_claude.ui.tui import TextualTUI
 
 
-def _find_upwards(filename: str, start: Path) -> Path | None:
-    """Search for a file in start dir and its parents."""
-    for directory in [start, *start.parents]:
-        candidate = directory / filename
-        if candidate.exists():
-            return candidate
-    return None
+def _persist_env_key(key: str, value: str, env_file: Path = Path.home() / ".mini-claude.env") -> None:
+    """Persist one key to the user-level env file."""
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+    line = f"{key}={value}"
+    if not env_file.exists():
+        env_file.write_text(line + "\n", encoding="utf-8")
+        return
+
+    content = env_file.read_text(encoding="utf-8")
+    pattern = re.compile(rf"^{re.escape(key)}\s*=.*", re.MULTILINE)
+    if pattern.search(content):
+        content = pattern.sub(line, content)
+    else:
+        if content and not content.endswith("\n"):
+            content += "\n"
+        content += line + "\n"
+    env_file.write_text(content, encoding="utf-8")
+
+
+def _is_placeholder_api_key(value: str) -> bool:
+    """Return True when a key looks like an example/placeholder rather than a real key."""
+    val = value.strip().lower()
+    if not val:
+        return True
+    placeholders = {
+        "sk-...",
+        "sk-ant-...",
+        "<api-key>",
+        "<your-api-key>",
+        "your-api-key",
+    }
+    return val in placeholders or val.endswith("...")
 
 
 def load_env() -> None:
-    """Load environment variables.
-
-    Priority:
-    1. MINI_CLAUDE_ENV_FILE (absolute or relative path)
-    2. First `.env` found from CWD upwards
-    3. `.env` near installed package/project root
-    4. User config env (`~/.mini-claude.env`, `~/.config/mini-claude/.env`, `~/.mini-claude/.env`)
-    5. `.env.example` from CWD upwards
-    6. `.env.example` near installed package/project root
+    """Load environment variables from a single fixed file.
+    
+    If ~/.mini-claude.env doesn't exist, create it from .env.example template.
     """
-    explicit = os.getenv("MINI_CLAUDE_ENV_FILE")
-    if explicit:
-        explicit_path = Path(explicit).expanduser().resolve()
-        if explicit_path.exists():
-            load_dotenv(explicit_path)
-            return
-
-    cwd = Path.cwd().resolve()
-
-    # Repository root when running from source tree is usually two levels above this file.
-    package_root = Path(__file__).resolve().parents[2]
-
-    candidates = [
-        _find_upwards(".env", cwd),
-        package_root / ".env",
-        Path.home() / ".mini-claude.env",
-        Path.home() / ".config" / "mini-claude" / ".env",
-        Path.home() / ".mini-claude" / ".env",
-        _find_upwards(".env.example", cwd),
-        package_root / ".env.example",
-    ]
-
-    for path in candidates:
-        if path is not None and path.exists():
-            load_dotenv(path)
-            return
+    env_file = Path.home() / ".mini-claude.env"
+    
+    # If env file doesn't exist, create from template
+    if not env_file.exists():
+        # Find .env.example in project root
+        project_root = Path(__file__).parent.parent.parent
+        env_example = project_root / ".env.example"
+        
+        if env_example.exists():
+            env_file.parent.mkdir(parents=True, exist_ok=True)
+            example_content = env_example.read_text(encoding="utf-8")
+            env_file.write_text(example_content, encoding="utf-8")
+    
+    load_dotenv(env_file)
 
 
 def get_llm_provider(provider_name: str = "anthropic"):
@@ -81,23 +89,23 @@ def get_llm_provider(provider_name: str = "anthropic"):
     """
     def _resolve_api_key(var_name: str, provider_label: str) -> str:
         existing = os.getenv(var_name, "").strip()
-        if existing:
+        if existing and not _is_placeholder_api_key(existing):
             return existing
 
-        # Interactive fallback for CLI usage; allows empty value as requested.
+        # Interactive fallback for CLI usage.
         if sys.stdin.isatty():
-            entered = getpass.getpass(
-                prompt=(
-                    f"{var_name} not set for {provider_label}. "
-                    "Input API key (leave empty to continue): "
-                )
-            ).strip()
+            print(f"{var_name} not set (or still placeholder) for {provider_label}.")
+            entered = getpass.getpass("Input API key (hidden): ").strip()
             if entered:
                 os.environ[var_name] = entered
+                _persist_env_key(var_name, entered)
             return entered
 
-        # Non-interactive mode (CI/service): continue with empty key.
-        return ""
+        # Non-interactive mode (CI/service): provide explicit guidance.
+        raise ValueError(
+            f"{var_name} is not configured. Set it in ~/.mini-claude.env "
+            "or via MINI_CLAUDE_ENV_FILE."
+        )
 
     if provider_name == "openai":
         api_key = _resolve_api_key("OPENAI_API_KEY", "openai")
@@ -140,7 +148,7 @@ def main() -> None:
     provider_name = os.getenv("LLM_PROVIDER", "anthropic")
     work_dir = os.getenv("WORK_DIR", ".")
     max_iterations = int(os.getenv("MAX_ITERATIONS", "10"))
-    ui_mode = os.getenv("UI_MODE", "simple")
+    ui_mode = os.getenv("UI_MODE", "tui")
 
     # Setup components
     provider = get_llm_provider(provider_name)
