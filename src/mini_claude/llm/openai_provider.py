@@ -122,54 +122,56 @@ class OpenAIProvider(LLMProvider):
                 for tool in tools
             ]
 
-        # Stream from OpenAI
-        async with self.client.chat.completions.create(
+        # Stream from OpenAI-compatible endpoint.
+        # `chat.completions.create(..., stream=True)` returns a coroutine that
+        # resolves to an async iterator, not an async context manager.
+        stream = await self.client.chat.completions.create(
             model=self._model,
             max_tokens=4096,
             tools=openai_tools,
             messages=openai_messages,
             stream=True,
-        ) as stream:
-            accumulated_tool_calls: dict = {}
+        )
+        accumulated_tool_calls: dict = {}
 
-            async for chunk in stream:
-                if chunk.choices and len(chunk.choices) > 0:
-                    choice = chunk.choices[0]
+        async for chunk in stream:
+            if chunk.choices and len(chunk.choices) > 0:
+                choice = chunk.choices[0]
 
-                    if choice.delta.content:
-                        yield TextDelta(text=choice.delta.content)
+                if choice.delta.content:
+                    yield TextDelta(text=choice.delta.content)
 
-                    if choice.delta.tool_calls:
-                        for tool_call in choice.delta.tool_calls:
-                            idx = tool_call.index
-                            if idx not in accumulated_tool_calls:
-                                accumulated_tool_calls[idx] = {
-                                    "id": "",
-                                    "name": "",
-                                    "arguments": "",
-                                }
+                if choice.delta.tool_calls:
+                    for tool_call in choice.delta.tool_calls:
+                        idx = tool_call.index
+                        if idx not in accumulated_tool_calls:
+                            accumulated_tool_calls[idx] = {
+                                "id": "",
+                                "name": "",
+                                "arguments": "",
+                            }
 
-                            if tool_call.id:
-                                accumulated_tool_calls[idx]["id"] = tool_call.id
-                            if tool_call.function.name:
-                                accumulated_tool_calls[idx]["name"] = tool_call.function.name
-                            if tool_call.function.arguments:
-                                accumulated_tool_calls[idx]["arguments"] += tool_call.function.arguments
+                        if tool_call.id:
+                            accumulated_tool_calls[idx]["id"] = tool_call.id
+                        if tool_call.function.name:
+                            accumulated_tool_calls[idx]["name"] = tool_call.function.name
+                        if tool_call.function.arguments:
+                            accumulated_tool_calls[idx]["arguments"] += tool_call.function.arguments
 
-                    if choice.finish_reason == "tool_calls":
-                        # Yield all accumulated tool calls
-                        for tool_call in accumulated_tool_calls.values():
-                            try:
-                                input_dict = json.loads(tool_call["arguments"])
-                            except json.JSONDecodeError:
-                                input_dict = {}
+                if choice.finish_reason == "tool_calls":
+                    # Yield all accumulated tool calls
+                    for tool_call in accumulated_tool_calls.values():
+                        try:
+                            input_dict = json.loads(tool_call["arguments"])
+                        except json.JSONDecodeError:
+                            input_dict = {}
 
-                            yield ToolUseDelta(
-                                id=tool_call["id"],
-                                name=tool_call["name"],
-                                input=input_dict,
-                            )
-                        accumulated_tool_calls = {}
+                        yield ToolUseDelta(
+                            id=tool_call["id"],
+                            name=tool_call["name"],
+                            input=input_dict,
+                        )
+                    accumulated_tool_calls = {}
 
-                    if choice.finish_reason == "stop":
-                        yield StopSignal(stop_reason="end_turn")
+                if choice.finish_reason == "stop":
+                    yield StopSignal(stop_reason="end_turn")
