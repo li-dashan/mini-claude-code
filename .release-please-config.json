@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "python",
+  "packages": {
+    ".": {
+      "package-name": "mini-claude-code",
+      "release-type": "python"
+    }
+  },
+  "changelog-path": "CHANGELOG.md"
+}

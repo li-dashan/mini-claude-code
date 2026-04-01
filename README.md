@@ -149,6 +149,24 @@ mypy src
 pytest
 ```
 
+## 自动化 Release
+
+本项目已接入基于 GitHub Actions 的自动化 Release：
+
+- `Release Please`：监听 `main`，自动生成/更新 Release PR（版本号 + CHANGELOG）
+- `Release Publish`：当 GitHub Release 发布后，自动构建 `dist/*` 并上传到 release assets
+
+工作流文件：
+
+- `.github/workflows/release-please.yml`
+- `.github/workflows/release-publish.yml`
+
+建议使用 Conventional Commits：
+
+- `feat:` -> minor
+- `fix:` -> patch
+- `feat!:` 或 `BREAKING CHANGE:` -> major
+
 ## 许可证
 
 本项目使用 MIT License，详见 `LICENSE` 文件。
