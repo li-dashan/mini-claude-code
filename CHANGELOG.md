@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.2.2...mini-claude-code-v0.3.0) (2026-04-01)
+
+
+### Features
+
+* auto-create ~/.mini-claude.env from .env.example template on first run ([785fc23](https://github.com/li-dashan/mini-claude-code/commit/785fc232ee50e371284964896c08071682da68e3))
+
+
+### Documentation
+
+* update README ([f69dc1f](https://github.com/li-dashan/mini-claude-code/commit/f69dc1f35c69e0b5b807feebdcec7d103a122b8c))
+
 ## [0.2.2](https://github.com/li-dashan/mini-claude-code/compare/mini-claude-code-v0.2.1...mini-claude-code-v0.2.2) (2026-04-01)
 
 
