@@ -24,6 +24,8 @@
 - Agentic Loop：流式输出 + 工具调用 + 多轮迭代
 - 多工具系统：`bash` / `read_file` / `write_file` / `glob`
 - 两套终端体验：`simple`（Rich REPL）与 `tui`（Textual 界面）
+- Buddy 电子宠物：多角色设定（外表/特性/故事/数值），按 username+hostname 永久分配，不可切换
+- 思考动画 + 工具反馈：thinking 时动态表情，工具调用成功/失败会影响心情与信任值
 - 可读性导向：代码结构清晰，适合学习和二次改造
 
 ## 快速开始
@@ -90,6 +92,10 @@ python -m mini_claude.main
 - `/exit`：退出
 - `/clear`：清空上下文历史
 - `/history`：显示当前上下文估算 token 数
+- `/buddy`：查看 buddy 当前状态与名册
+- `/profile`：查看 buddy 完整介绍页（含属性数值可视化）
+- `/pet`：抚摸 buddy，提升信任值
+- `/feed`：投喂 buddy，恢复能量
 
 ## Agentic Loop 核心
 

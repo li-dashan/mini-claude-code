@@ -43,7 +43,8 @@ def get_llm_provider(provider_name: str = "anthropic"):
         if not api_key:
             raise ValueError("OPENAI_API_KEY not set in environment")
         model = os.getenv("OPENAI_MODEL", "gpt-4o")
-        return OpenAIProvider(api_key=api_key, model=model)
+        base_url = os.getenv("OPENAI_BASE_URL") or None
+        return OpenAIProvider(api_key=api_key, model=model, base_url=base_url)
     else:
         # Default to Anthropic
         api_key = os.getenv("ANTHROPIC_API_KEY")

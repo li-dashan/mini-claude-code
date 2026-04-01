@@ -19,16 +19,18 @@ from .provider import LLMProvider
 
 
 class OpenAIProvider(LLMProvider):
-    """OpenAI provider using the official SDK."""
+    """OpenAI-compatible provider (works with OpenAI, 147api, and any OpenAI-compatible endpoint)."""
 
-    def __init__(self, api_key: str, model: str = "gpt-4o"):
-        """Initialize OpenAI provider.
+    def __init__(self, api_key: str, model: str = "gpt-4o", base_url: str | None = None):
+        """Initialize OpenAI-compatible provider.
 
         Args:
-            api_key: OpenAI API key
+            api_key: API key for the service
             model: Model name (default: gpt-4o)
+            base_url: Optional custom API base URL for third-party providers
+                      (e.g. https://api.147api.com/v1). Defaults to OpenAI's endpoint.
         """
-        self.client = openai.AsyncOpenAI(api_key=api_key)
+        self.client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url or None)
         self._model = model
 
     @property
