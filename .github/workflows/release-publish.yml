@@ -1,8 +1,7 @@
 name: Release Publish
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -47,7 +46,7 @@ jobs:
     needs: build-and-upload
     environment:
       name: pypi
-      url: https://pypi.org/p/mini-claude-code
+      url: https://pypi.org/project/mini-claude-code/
 
     steps:
       - name: Download distributions
