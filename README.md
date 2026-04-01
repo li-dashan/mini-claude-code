@@ -93,6 +93,19 @@ UI_MODE=simple
 	- `OPENAI_API_KEY=<平台 key>`
 	- `OPENAI_BASE_URL=<平台 OpenAI 兼容 base url>`（通常带 `/v1`）
 
+### 2.1 配置文件查找优先级
+
+`mini-claude` 启动时会按以下顺序加载环境变量（命中即停止）：
+
+1. `MINI_CLAUDE_ENV_FILE` 指定的文件
+2. 当前工作目录向上查找 `.env`
+3. 包/项目根目录附近的 `.env`
+4. 用户级配置：`~/.config/mini-claude/.env`、`~/.mini-claude/.env`
+5. 当前工作目录向上查找 `.env.example`
+6. 包/项目根目录附近的 `.env.example`
+
+这意味着你可以在任意路径执行 `mini-claude`，并通过 `MINI_CLAUDE_ENV_FILE` 精确指定配置文件。
+
 ### 3. 运行
 
 ```bash
@@ -199,6 +212,31 @@ mypy src
 ```bash
 pytest
 ```
+
+## 发布流程（GitHub + PyPI）
+
+当前项目已配置：
+
+- `Release Please`：自动生成 release PR / tag / GitHub Release
+- 自动发布 PyPI：在 release 创建后构建并上传
+- 手动兜底发布：`Release Publish` workflow（`workflow_dispatch`）
+
+建议发布步骤：
+
+1. 按 Conventional Commits 提交（`feat:` / `fix:` 等）
+2. 合并 release-please 生成的 release PR
+3. 等待 GitHub Actions 完成发布
+4. 在 PyPI 页面确认新版本可见
+
+如果自动发布未触发，可在 Actions 中手动运行 `Release Publish`。
+
+## 常见问题
+
+- PyPI README 图片不显示：
+	- 使用 GitHub Raw 绝对链接，不要用仓库相对路径
+- 聚合平台连接失败：
+	- 检查 `OPENAI_BASE_URL` 是否为 OpenAI 兼容地址且通常带 `/v1`
+	- 确认 `LLM_PROVIDER=openai` 与 `OPENAI_API_KEY` 匹配
 
 ## 许可证
 
