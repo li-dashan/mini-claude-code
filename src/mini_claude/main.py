@@ -17,6 +17,7 @@ from mini_claude.tools import (
 from mini_claude.core.context_manager import ContextManager
 from mini_claude.core.query_engine import QueryEngine
 from mini_claude.ui.simple_repl import SimpleREPL
+from mini_claude.ui.tui import TextualTUI
 
 
 def load_env() -> None:
@@ -103,9 +104,7 @@ def main() -> None:
 
     # Run UI
     if ui_mode == "tui":
-        # Phase 3: Textual TUI (not implemented yet)
-        print("TUI mode not yet implemented, falling back to simple REPL")
-        ui = SimpleREPL(query_engine)
+        ui = TextualTUI(query_engine)
         asyncio.run(ui.run())
     else:
         # Phase 1: Simple REPL
